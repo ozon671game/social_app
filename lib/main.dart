@@ -64,10 +64,11 @@ class _MyStatefulWidgetState extends State<MyStatefulWidget> {
     // static initialization inside class
     final List<Widget> _widgetOptions = <Widget>[
       ListUsersTab(usersList),
-      UserTab(),
+      UserTab(usersList[0]),
       const Text('Business'),
       const Text('School'),
       const Text(
+
         'Settings',
       ),
     ];
@@ -145,6 +146,32 @@ class _MyStatefulWidgetState extends State<MyStatefulWidget> {
   }
 }
 
+class UserCardFull extends StatefulWidget {
+
+  int id;
+  UserCard user;
+
+  UserCardFull(this.id, this.user,{Key? key});
+
+  @override
+  State<UserCardFull> createState() => _UserCardFullState();
+}
+
+class _UserCardFullState extends State<UserCardFull> {
+  @override
+  Widget build(BuildContext context){
+  return Scaffold(
+    appBar: AppBar(
+      title: Text(widget.user.name),
+      actions: [
+        IconButton(icon: const Icon(Icons.arrow_back), onPressed: (){Navigator.pop(context);},),
+      ],
+    ),
+    body: UserTab(widget.user),
+  );
+}
+}
+
 class ListUsersTab extends StatelessWidget {
   final List<UserCard> usersList;
 
@@ -155,8 +182,10 @@ class ListUsersTab extends StatelessWidget {
     return ListView.builder(
       itemBuilder: (context, index) {
         return ListTile(
-          leading: Text(usersList[index].name),
-          title: Text(usersList[index].email),
+          leading: const Icon(Icons.account_circle),
+          title: Text(usersList[index].name),
+          subtitle: Text(usersList[index].email),
+          onTap: (){Navigator.push(context, MaterialPageRoute(builder: (context) => (UserCardFull(index,usersList[index]))));},
         );
       },
       itemCount: usersList.length,
@@ -165,11 +194,19 @@ class ListUsersTab extends StatelessWidget {
 }
 
 class UserTab extends StatefulWidget {
+
+  UserCard user;
+  UserTab(this.user);
+
   @override
-  State<StatefulWidget> createState() => UserTabState();
+  State<StatefulWidget> createState() => UserTabState(user);
 }
 
 class UserTabState extends State<UserTab> {
+
+  UserCard user;
+  UserTabState(this.user);
+
   bool isExpandedd = false;
   List<String> myStrings = ['View All', 'Hide'];
   late String varString;
@@ -190,14 +227,14 @@ class UserTabState extends State<UserTab> {
             leading: Image.asset('UserPhoto'),
             trailing:
                 IconButton(onPressed: () {}, icon: const Icon(Icons.edit)),
-            title: const Text(
-              'Username',
-              style: TextStyle(
+            title: Text(
+              user.name,
+              style: const TextStyle(
                 fontSize: 30,
                 fontWeight: FontWeight.w800,
               ),
             ),
-            subtitle: const Text('eMAIL'),
+            subtitle: Text(user.email),
           ),
         ),
 
@@ -227,18 +264,18 @@ class UserTabState extends State<UserTab> {
                   );
                 },
                 body: Column(
-                  children: const [
+                  children: [
                     ListTile(
-                      title: Text('Adress'),
-                      subtitle: Text('User Adress'),
+                      title: const Text('Adress'),
+                      subtitle: Text(user.adress),
                     ),
                     ListTile(
-                      title: Text('Phone'),
-                      subtitle: Text('User Phone'),
+                      title: const Text('Phone'),
+                      subtitle: Text(user.phone),
                     ),
                     ListTile(
-                      title: Text('Website'),
-                      subtitle: Text('User Website'),
+                      title: const Text('Website'),
+                      subtitle: Text(user.website),
                     ),
                   ],
                 ),
@@ -247,6 +284,7 @@ class UserTabState extends State<UserTab> {
             ],
           ),
         ),
+
         // ListView.separated(
         //     padding: const EdgeInsets.all(8),
         //     itemCount: 3,
