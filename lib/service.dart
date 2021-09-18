@@ -11,7 +11,7 @@ Future<List<UserCard>> updateData() async {
 List<UserCard> _processResponse(http.Response response) {
   if (response.statusCode == 200) {
     var users = jsonDecode(response.body)['profile'];
-    var u = users.map((user) => UserCard.fromJson(user, 'U1')).whereType<UserCard>().toList();
+    var u = users.map((user) => UserCard.fromJson(user, user['name'])).whereType<UserCard>().toList();
     return u;
   }
   return [];
