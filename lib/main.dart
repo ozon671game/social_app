@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import 'profile.dart';
@@ -223,9 +224,17 @@ class UserTabState extends State<UserTab> {
   List<WorkingCompany> listWC = [];
   List<WorkingCompany> myListWC = [];
 
+  List<Album> listAlbum = [];
+  List<Album> myListAlbum = [];
+
   Future<void> func() async {
     listWC = await updateDataWorkingCompanyList();
-    setState(() {myListWC = defineWorkingCompany(widget.user.id, listWC);});
+    listAlbum = await updateDataAlbumList();
+    setState(() {
+      myListWC = defineWorkingCompany(widget.user.id, listWC);
+      myListAlbum = defineAlbum(widget.user.id, listAlbum);
+      myListAlbum.forEach((element) {print(element.title);});
+    });
   }
 
   bool isExpandedd = false;
@@ -240,7 +249,6 @@ class UserTabState extends State<UserTab> {
     myPostList = definePosts(widget.user.id, widget.postList);
     varString = !isExpandedd ? myStrings[0] : myStrings[1];
     func();
-
   }
 
   @override
@@ -303,15 +311,13 @@ class UserTabState extends State<UserTab> {
                     ListTile(
                       title: const Text('Working Company:'),
                       subtitle: ListView.builder(
-                        itemCount: myListWC.length,
-                        shrinkWrap: true,
-                          itemBuilder: (BuildContext context, int index){
+                          itemCount: myListWC.length,
+                          shrinkWrap: true,
+                          itemBuilder: (BuildContext context, int index) {
                             return Text('name: ${myListWC[index].name} '
                                 'bs: ${myListWC[index].bs} '
-                                'catchPhrase: ${myListWC[index].catchPhrase}'
-                            );
-                          }
-                      ),
+                                'catchPhrase: ${myListWC[index].catchPhrase}');
+                          }),
                     ),
                     ListTile(
                       title: const Text('Website'),
@@ -325,12 +331,47 @@ class UserTabState extends State<UserTab> {
           ),
         ),
 
+        GridView.builder(gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: myListAlbum.length > 3 ? 3 : myListAlbum.length,
+        ),
+            itemCount: myListAlbum.length > 3 ? 3 : myListAlbum.length,
+            physics: NeverScrollableScrollPhysics(),
+            shrinkWrap: true,
+            itemBuilder: (BuildContext context, int index){
+              return Card(
+                child: Center(
+                  child: Text(myListAlbum[index].title),
+                ),
+              );
+            }
+        ),
+        TextButton(
+            onPressed: () {
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => AllAlbumsWidget(
+                          widget.user, myListAlbum)));
+            },
+            child: const Text('View All')
+        ),
+
+        const Text('Posts:',
+        style: TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.w500,
+        ),),
+        const Divider(
+          thickness: 20,
+          height: 0,
+        ),
+
         Container(
           child: ListView.builder(
               shrinkWrap: true,
               itemCount: myPostList.length > 3 ? 3 : myPostList.length,
-              itemBuilder: (BuildContext context, int index){
-                return  Container(
+              itemBuilder: (BuildContext context, int index) {
+                return Container(
                   padding: const EdgeInsets.symmetric(vertical: 10),
                   child: ListTile(
                     leading: const Icon(Icons.account_circle),
@@ -340,9 +381,19 @@ class UserTabState extends State<UserTab> {
                     ]),
                   ),
                 );
-              }
-          ),
+              }),
         ),
+        TextButton(
+            onPressed: () {
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => AllPostWidget(
+                          widget.user.id, widget.user, widget.postList)));
+            },
+            child: const Text('View All')
+        ),
+
       ],
     );
   }
@@ -424,6 +475,50 @@ class PostScreenState extends State<PostScreen> {
     );
   }
 }
+
+class AllAlbumsWidget extends StatefulWidget {
+  UserCard user;
+  List<Album> listAlbum;
+
+  AllAlbumsWidget(this.user, this.listAlbum, {Key? key});
+
+  @override
+  State<StatefulWidget> createState() => _AllAlbumsWidgetState();
+}
+
+class _AllAlbumsWidgetState extends State<AllAlbumsWidget> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.user.username),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () {
+              Navigator.pop(context);
+            },
+          ),
+        ],
+      ),
+      body: GridView.builder(gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: widget.listAlbum.length > 3 ? 3 : widget.listAlbum.length
+      ),
+          itemCount: widget.listAlbum.length,
+          // physics: NeverScrollableScrollPhysics(),
+          // shrinkWrap: true,
+          itemBuilder: (BuildContext context, int index){
+            return Card(
+              child: Center(
+                child: Text(widget.listAlbum[index].title),
+              ),
+            );
+          }
+      ),
+    );
+  }
+}
+
 
 class Menus extends StatelessWidget {
   const Menus({

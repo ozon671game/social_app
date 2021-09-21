@@ -13,6 +13,11 @@ Future<List<Post>> updateDataPostList() async {
   return _processResponseForPost(a);
 }
 
+Future<List<Album>> updateDataAlbumList() async {
+  var a = await http.get(Uri.parse('https://my-json-server.typicode.com/ozon671game/demo/db'));
+  return _processResponseForAlbum(a);
+}
+
 Future<List<WorkingCompany>> updateDataWorkingCompanyList() async {
   var a = await http.get(Uri.parse('https://my-json-server.typicode.com/ozon671game/demo/db'));
   return _processResponseForWorkingCompany(a);
@@ -45,6 +50,15 @@ List<WorkingCompany> _processResponseForWorkingCompany(http.Response response){
   return [];
 }
 
+List<Album> _processResponseForAlbum(http.Response response){
+  if (response.statusCode == 200) {
+    var album = jsonDecode(response.body)['albums'];
+    var u = album.map((album) => Album.fromJson(album, album['userId'])).whereType<Album>().toList();
+    return u;
+  }
+  return [];
+}
+
 List<Post> definePosts(int id, List<Post> listPost){
   List<Post> myListPost = [];
   listPost.forEach((post) {
@@ -63,4 +77,14 @@ List<WorkingCompany> defineWorkingCompany(int id, List<WorkingCompany> listWorki
     }
   });
   return myListWorkingCompany;
+}
+
+List<Album> defineAlbum(int id, List<Album> listAlbum){
+  List<Album> myListAlbum = [];
+  listAlbum.forEach((album) {
+    if(album.userId == id) {
+      myListAlbum.add(album);
+    }
+  });
+  return myListAlbum;
 }
