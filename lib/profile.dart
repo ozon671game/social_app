@@ -83,16 +83,19 @@ class WorkingCompany{
 class Album{
   final int id;
   final int userId;
+  final int numberPhotos;
   final String title;
 
-  Album(this.id, this.userId, this.title);
+  Album(this.id, this.userId, this.numberPhotos, this.title);
 
   Album.fromJson(Map<String, dynamic> json, this.userId)
       : id = json['id'],
+        numberPhotos = json['numberPhotos'],
         title = json['title'];
 
   Map<String, dynamic> toJson() => {
     'title': title,
+    'numberPhotos': numberPhotos,
     'id': id,
   };
 }

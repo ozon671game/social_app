@@ -30,10 +30,12 @@ class MyStatefulWidget extends StatefulWidget {
 class _MyStatefulWidgetState extends State<MyStatefulWidget> {
   List<UserCard> usersList = [];
   List<Post> postList = [];
+  List<Album> albumList = [];
 
   Future<void> func() async {
     usersList = await updateDataUserList();
     postList = await updateDataPostList();
+    albumList = await updateDataAlbumList();
     setState(() {});
   }
 
@@ -47,10 +49,9 @@ class _MyStatefulWidgetState extends State<MyStatefulWidget> {
 
   final List<Widget> _appBarList = <Widget>[
     const Text('All Users'),
-    const Text('Me is: '),
-    const Text('Users'),
-    const Text('Users'),
-    const Text('Users'),
+    const Text('My Account: '),
+    const Text('My Posts'),
+    const Text('My Albums'),
   ];
 
   void _onItemTapped(int index) {
@@ -66,7 +67,7 @@ class _MyStatefulWidgetState extends State<MyStatefulWidget> {
       ListUsersTab(usersList, postList),
       UserTab(usersList[0], postList),
       AllPostWidget(usersList[0].id, usersList[0], postList),
-      const Text('School'),
+      AllAlbumsWidget(usersList[0], albumList),
       const Text(
         'Settings',
       ),
@@ -101,11 +102,6 @@ class _MyStatefulWidgetState extends State<MyStatefulWidget> {
               title: const Text('Settings'),
               onTap: () {},
             ),
-            ListTile(
-              leading: const Icon(Icons.exit_to_app),
-              title: const Text('Exit'),
-              onTap: () {},
-            ),
           ],
         ),
       ),
@@ -132,11 +128,6 @@ class _MyStatefulWidgetState extends State<MyStatefulWidget> {
           BottomNavigationBarItem(
             icon: Icon(Icons.school),
             label: 'School',
-            backgroundColor: Colors.indigoAccent,
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
-            label: 'Settings',
             backgroundColor: Colors.indigoAccent,
           ),
         ],
@@ -233,7 +224,6 @@ class UserTabState extends State<UserTab> {
     setState(() {
       myListWC = defineWorkingCompany(widget.user.id, listWC);
       myListAlbum = defineAlbum(widget.user.id, listAlbum);
-      myListAlbum.forEach((element) {print(element.title);});
     });
   }
 
@@ -272,10 +262,10 @@ class UserTabState extends State<UserTab> {
         ),
         Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
           IconButton(
-              onPressed: () {}, tooltip: 'Edit', icon: const Icon(Icons.edit)),
+              onPressed: () {}, icon: const Icon(Icons.email)),
           IconButton(onPressed: () {}, icon: const Icon(Icons.add_a_photo)),
-          IconButton(onPressed: () {}, icon: const Icon(Icons.edit)),
-          IconButton(onPressed: () {}, icon: const Icon(Icons.edit)),
+          IconButton(onPressed: () {}, icon: const Icon(Icons.album)),
+          IconButton(onPressed: () {}, icon: const Icon(Icons.phone)),
         ]),
         Container(
           padding: EdgeInsets.zero,
@@ -505,12 +495,17 @@ class _AllAlbumsWidgetState extends State<AllAlbumsWidget> {
         crossAxisCount: widget.listAlbum.length > 3 ? 3 : widget.listAlbum.length
       ),
           itemCount: widget.listAlbum.length,
-          // physics: NeverScrollableScrollPhysics(),
-          // shrinkWrap: true,
           itemBuilder: (BuildContext context, int index){
             return Card(
-              child: Center(
-                child: Text(widget.listAlbum[index].title),
+              child: InkWell(
+                onTap: (){
+                  Navigator.push(
+                      context, MaterialPageRoute(builder: (context) =>
+                      PhotosWidget(widget.listAlbum[index])));
+                },
+                child: Center(
+                  child: Text(widget.listAlbum[index].title),
+                ),
               ),
             );
           }
@@ -519,6 +514,45 @@ class _AllAlbumsWidgetState extends State<AllAlbumsWidget> {
   }
 }
 
+class PhotosWidget extends StatefulWidget {
+  // int id;
+  // List<Album> listAlbum;
+  Album album;
+
+  PhotosWidget(this.album, {Key? key});
+
+  @override
+  State<StatefulWidget> createState() => _PhotosWidgetState();
+}
+
+class _PhotosWidgetState extends State<PhotosWidget> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.album.title),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () {
+              Navigator.pop(context);
+            },
+          ),
+        ],
+      ),
+      body: GridView.builder(gridDelegate: const  SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 4,
+      ),
+          itemCount: widget.album.numberPhotos,
+          itemBuilder: (BuildContext context, int index){
+            return const Card(
+              child: FlutterLogo()
+            );
+          }
+      ),
+    );
+  }
+}
 
 class Menus extends StatelessWidget {
   const Menus({
