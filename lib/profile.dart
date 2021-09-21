@@ -36,14 +36,13 @@ class UserCard {
   };
 }
 
-
 class Post{
   final int id;
   final int userId;
   final String title;
   final String description;
 
-  Post(this.id, this.title,this.description,this.userId);
+  Post(this.id, this.title, this.description, this.userId);
 
   Post.fromJson(Map<String, dynamic> json, this.userId)
       : title = json['title'],
@@ -55,5 +54,28 @@ class Post{
     'description': description,
     'id': id,
 
+  };
+}
+
+class WorkingCompany{
+  final int id;
+  final int userId;
+  final String name;
+  final String bs;
+  final String catchPhrase;
+
+  WorkingCompany(this.id, this.userId, this.bs, this.catchPhrase, this.name);
+
+  WorkingCompany.fromJson(Map<String, dynamic> json, this.userId)
+      : id = json['id'],
+        bs = json['bs'],
+        name = json['name'],
+        catchPhrase = json['catchPhrase'];
+
+  Map<String, dynamic> toJson() => {
+    'bs': bs,
+    'catchPhrase': catchPhrase,
+    'name': name,
+    'id': id,
   };
 }

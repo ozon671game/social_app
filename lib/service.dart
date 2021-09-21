@@ -13,6 +13,11 @@ Future<List<Post>> updateDataPostList() async {
   return _processResponseForPost(a);
 }
 
+Future<List<WorkingCompany>> updateDataWorkingCompanyList() async {
+  var a = await http.get(Uri.parse('https://my-json-server.typicode.com/ozon671game/demo/db'));
+  return _processResponseForWorkingCompany(a);
+}
+
 List<UserCard> _processResponse(http.Response response) {
   if (response.statusCode == 200) {
     var users = jsonDecode(response.body)['profile'];
@@ -31,6 +36,15 @@ List<Post> _processResponseForPost(http.Response response){
   return [];
 }
 
+List<WorkingCompany> _processResponseForWorkingCompany(http.Response response){
+  if (response.statusCode == 200) {
+    var company = jsonDecode(response.body)['workingCompany'];
+    var u = company.map((company) => WorkingCompany.fromJson(company, company['userId'])).whereType<WorkingCompany>().toList();
+    return u;
+  }
+  return [];
+}
+
 List<Post> definePosts(int id, List<Post> listPost){
   List<Post> myListPost = [];
   listPost.forEach((post) {
@@ -39,4 +53,14 @@ List<Post> definePosts(int id, List<Post> listPost){
     }
   });
   return myListPost;
+}
+
+List<WorkingCompany> defineWorkingCompany(int id, List<WorkingCompany> listWorkingCompany){
+  List<WorkingCompany> myListWorkingCompany = [];
+  listWorkingCompany.forEach((company) {
+    if(company.userId == id) {
+      myListWorkingCompany.add(company);
+    }
+  });
+  return myListWorkingCompany;
 }

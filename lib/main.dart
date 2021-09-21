@@ -220,6 +220,13 @@ class UserTab extends StatefulWidget {
 }
 
 class UserTabState extends State<UserTab> {
+  List<WorkingCompany> listWC = [];
+  List<WorkingCompany> myListWC = [];
+
+  Future<void> func() async {
+    listWC = await updateDataWorkingCompanyList();
+    setState(() {myListWC = defineWorkingCompany(widget.user.id, listWC);});
+  }
 
   bool isExpandedd = false;
   List<String> myStrings = ['View All', 'Hide'];
@@ -231,8 +238,9 @@ class UserTabState extends State<UserTab> {
   void initState() {
     super.initState();
     myPostList = definePosts(widget.user.id, widget.postList);
-    print(myPostList.length);
     varString = !isExpandedd ? myStrings[0] : myStrings[1];
+    func();
+
   }
 
   @override
@@ -293,6 +301,19 @@ class UserTabState extends State<UserTab> {
                       subtitle: Text(widget.user.phone),
                     ),
                     ListTile(
+                      title: const Text('Working Company:'),
+                      subtitle: ListView.builder(
+                        itemCount: myListWC.length,
+                        shrinkWrap: true,
+                          itemBuilder: (BuildContext context, int index){
+                            return Text('name: ${myListWC[index].name} '
+                                'bs: ${myListWC[index].bs} '
+                                'catchPhrase: ${myListWC[index].catchPhrase}'
+                            );
+                          }
+                      ),
+                    ),
+                    ListTile(
                       title: const Text('Website'),
                       subtitle: Text(widget.user.website),
                     ),
@@ -322,42 +343,6 @@ class UserTabState extends State<UserTab> {
               }
           ),
         ),
-
-
-        // Column(
-        //   children: [
-        //
-        //     Container(
-        //       padding: EdgeInsets.symmetric(vertical: 10),
-        //       child: ListTile(
-        //         leading: Icon(Icons.account_circle),
-        //         title: Text(''),
-        //         subtitle: Row(children: const [
-        //           Text('Text of Post. A lot of text. many many many texts'),
-        //         ]),
-        //       ),
-        //     ),
-        //     Container(
-        //       padding: EdgeInsets.symmetric(vertical: 10),
-        //       child: ListTile(
-        //         leading: Icon(Icons.account_circle),
-        //         title: Text('Username'),
-        //         subtitle: Row(children: const [
-        //           Text('Text of Post. A lot of text. many many many texts'),
-        //         ]),
-        //       ),
-        //     ),
-        //     TextButton(
-        //         onPressed: () {
-        //           Navigator.push(
-        //               context,
-        //               MaterialPageRoute(
-        //                   builder: (context) => AllPostWidget(
-        //                       widget.user.id, widget.user, widget.postList)));
-        //         },
-        //         child: Text('View All'))
-        //   ],
-        // ),
       ],
     );
   }
