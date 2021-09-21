@@ -10,26 +10,50 @@ class UserCard {
   final int id;
   final String name;
   final String phone;
+  final String username;
   final String website;
 
-  late Map<String, dynamic> _valueMap;
 
   UserCard(
-      this.adress, this.email, this.id, this.name, this.phone, this.website);
+      this.adress, this.email, this.id, this.name, this.phone, this.username, this.website);
 
 
-  UserCard.fromJson(Map<String, dynamic> _valueMap, this.name)
-      : adress = _valueMap['adress'],
-        email = _valueMap['email'],
-        id = _valueMap['id'],
-        phone = _valueMap['phone'],
-        website = _valueMap['website'];
+  UserCard.fromJson(Map<String, dynamic> json, this.username)
+      : adress = json['adress'],
+        email = json['email'],
+        id = json['id'],
+        phone = json['phone'],
+        name = json['name'],
+        website = json['website'];
 
   Map<String, dynamic> toJson() => {
     'adress': adress,
     'email': email,
     'id': id,
     'phone': phone,
+    'name': name,
     'website': website,
+  };
+}
+
+
+class Post{
+  final int id;
+  final int userId;
+  final String title;
+  final String description;
+
+  Post(this.id, this.title,this.description,this.userId);
+
+  Post.fromJson(Map<String, dynamic> json, this.userId)
+      : title = json['title'],
+        description = json['description'],
+        id = json['id'];
+
+  Map<String, dynamic> toJson() => {
+    'title': title,
+    'description': description,
+    'id': id,
+
   };
 }

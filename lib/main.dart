@@ -12,7 +12,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return const MaterialApp(
       title: _title,
       home: MyStatefulWidget(),
     );
@@ -27,14 +27,14 @@ class MyStatefulWidget extends StatefulWidget {
 }
 
 class _MyStatefulWidgetState extends State<MyStatefulWidget> {
-
   List<UserCard> usersList = [];
+  List<Post> postList = [];
 
-  Future<void> func() async{
-    usersList = await updateData();
+  Future<void> func() async {
+    usersList = await updateDataUserList();
+    postList = await updateDataPostList();
     setState(() {});
   }
-
 
   @override
   void initState() {
@@ -60,15 +60,13 @@ class _MyStatefulWidgetState extends State<MyStatefulWidget> {
 
   @override
   Widget build(BuildContext context) {
-
     // static initialization inside class
     final List<Widget> _widgetOptions = <Widget>[
-      ListUsersTab(usersList),
-      UserTab(usersList[0]),
-      const Text('Business'),
+      ListUsersTab(usersList, postList),
+      UserTab(usersList[0], postList),
+      AllPostWidget(usersList[0].id, usersList[0], postList),
       const Text('School'),
       const Text(
-
         'Settings',
       ),
     ];
@@ -85,10 +83,13 @@ class _MyStatefulWidgetState extends State<MyStatefulWidget> {
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
-            const DrawerHeader(
-                child: ListTile(
-                    leading: Icon(Icons.account_circle_outlined),
-                    title: Text('My Account'))),
+            DrawerHeader(
+              child: ListTile(
+                leading: const Icon(Icons.account_circle_outlined),
+                title: Text(usersList[0].username),
+                subtitle: Text(usersList[0].name),
+              ),
+            ),
             ListTile(
               leading: const Icon(Icons.message),
               title: const Text('Messages'),
@@ -147,11 +148,11 @@ class _MyStatefulWidgetState extends State<MyStatefulWidget> {
 }
 
 class UserCardFull extends StatefulWidget {
-
   int id;
   UserCard user;
+  List<Post> postList;
 
-  UserCardFull(this.id, this.user,{Key? key});
+  UserCardFull(this.id, this.user, this.postList, {Key? key});
 
   @override
   State<UserCardFull> createState() => _UserCardFullState();
@@ -159,23 +160,29 @@ class UserCardFull extends StatefulWidget {
 
 class _UserCardFullState extends State<UserCardFull> {
   @override
-  Widget build(BuildContext context){
-  return Scaffold(
-    appBar: AppBar(
-      title: Text(widget.user.name),
-      actions: [
-        IconButton(icon: const Icon(Icons.arrow_back), onPressed: (){Navigator.pop(context);},),
-      ],
-    ),
-    body: UserTab(widget.user),
-  );
-}
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.user.username),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () {
+              Navigator.pop(context);
+            },
+          ),
+        ],
+      ),
+      body: UserTab(widget.user, widget.postList),
+    );
+  }
 }
 
 class ListUsersTab extends StatelessWidget {
   final List<UserCard> usersList;
+  final List<Post> postList;
 
-  ListUsersTab(this.usersList);
+  ListUsersTab(this.usersList, this.postList);
 
   @override
   Widget build(BuildContext context) {
@@ -183,9 +190,18 @@ class ListUsersTab extends StatelessWidget {
       itemBuilder: (context, index) {
         return ListTile(
           leading: const Icon(Icons.account_circle),
-          title: Text(usersList[index].name),
-          subtitle: Text(usersList[index].email),
-          onTap: (){Navigator.push(context, MaterialPageRoute(builder: (context) => (UserCardFull(index,usersList[index]))));},
+          title: Text(
+            usersList[index].username,
+            style: const TextStyle(fontWeight: FontWeight.w600),
+          ),
+          subtitle: Text(usersList[index].name),
+          onTap: () {
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) =>
+                        (UserCardFull(index, usersList[index], postList))));
+          },
         );
       },
       itemCount: usersList.length,
@@ -194,27 +210,28 @@ class ListUsersTab extends StatelessWidget {
 }
 
 class UserTab extends StatefulWidget {
-
   UserCard user;
-  UserTab(this.user);
+  List<Post> postList;
+
+  UserTab(this.user, this.postList);
 
   @override
-  State<StatefulWidget> createState() => UserTabState(user);
+  State<StatefulWidget> createState() => UserTabState();
 }
 
 class UserTabState extends State<UserTab> {
-
-  UserCard user;
-  UserTabState(this.user);
 
   bool isExpandedd = false;
   List<String> myStrings = ['View All', 'Hide'];
   late String varString;
 
+  List<Post> myPostList = [];
+
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
+    myPostList = definePosts(widget.user.id, widget.postList);
+    print(myPostList.length);
     varString = !isExpandedd ? myStrings[0] : myStrings[1];
   }
 
@@ -224,20 +241,19 @@ class UserTabState extends State<UserTab> {
       children: [
         DrawerHeader(
           child: ListTile(
-            leading: Image.asset('UserPhoto'),
+            leading: const FlutterLogo(), //Image.asset('UserPhoto'),
             trailing:
                 IconButton(onPressed: () {}, icon: const Icon(Icons.edit)),
             title: Text(
-              user.name,
+              widget.user.username,
               style: const TextStyle(
                 fontSize: 30,
                 fontWeight: FontWeight.w800,
               ),
             ),
-            subtitle: Text(user.email),
+            subtitle: Text(widget.user.name),
           ),
         ),
-
         Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
           IconButton(
               onPressed: () {}, tooltip: 'Edit', icon: const Icon(Icons.edit)),
@@ -245,7 +261,6 @@ class UserTabState extends State<UserTab> {
           IconButton(onPressed: () {}, icon: const Icon(Icons.edit)),
           IconButton(onPressed: () {}, icon: const Icon(Icons.edit)),
         ]),
-
         Container(
           padding: EdgeInsets.zero,
           child: ExpansionPanelList(
@@ -266,16 +281,20 @@ class UserTabState extends State<UserTab> {
                 body: Column(
                   children: [
                     ListTile(
+                      title: const Text('E-mail'),
+                      subtitle: Text(widget.user.email),
+                    ),
+                    ListTile(
                       title: const Text('Adress'),
-                      subtitle: Text(user.adress),
+                      subtitle: Text(widget.user.adress),
                     ),
                     ListTile(
                       title: const Text('Phone'),
-                      subtitle: Text(user.phone),
+                      subtitle: Text(widget.user.phone),
                     ),
                     ListTile(
                       title: const Text('Website'),
-                      subtitle: Text(user.website),
+                      subtitle: Text(widget.user.website),
                     ),
                   ],
                 ),
@@ -285,18 +304,138 @@ class UserTabState extends State<UserTab> {
           ),
         ),
 
-        // ListView.separated(
-        //     padding: const EdgeInsets.all(8),
-        //     itemCount: 3,
-        //     separatorBuilder: (BuildContext context, int index) => Divider(),
-        //     itemBuilder: (BuildContext context, int index) {
-        //       return Container(
-        //           padding: EdgeInsets.symmetric(vertical: 10),
-        //           child: Text('users[index]', style: TextStyle(fontSize: 22))
-        //       );
-        //     }
+        Container(
+          child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: myPostList.length > 3 ? 3 : myPostList.length,
+              itemBuilder: (BuildContext context, int index){
+                return  Container(
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  child: ListTile(
+                    leading: const Icon(Icons.account_circle),
+                    title: Text(myPostList[index].title),
+                    subtitle: Row(children: [
+                      Text(myPostList[index].description),
+                    ]),
+                  ),
+                );
+              }
+          ),
+        ),
+
+
+        // Column(
+        //   children: [
+        //
+        //     Container(
+        //       padding: EdgeInsets.symmetric(vertical: 10),
+        //       child: ListTile(
+        //         leading: Icon(Icons.account_circle),
+        //         title: Text(''),
+        //         subtitle: Row(children: const [
+        //           Text('Text of Post. A lot of text. many many many texts'),
+        //         ]),
+        //       ),
+        //     ),
+        //     Container(
+        //       padding: EdgeInsets.symmetric(vertical: 10),
+        //       child: ListTile(
+        //         leading: Icon(Icons.account_circle),
+        //         title: Text('Username'),
+        //         subtitle: Row(children: const [
+        //           Text('Text of Post. A lot of text. many many many texts'),
+        //         ]),
+        //       ),
+        //     ),
+        //     TextButton(
+        //         onPressed: () {
+        //           Navigator.push(
+        //               context,
+        //               MaterialPageRoute(
+        //                   builder: (context) => AllPostWidget(
+        //                       widget.user.id, widget.user, widget.postList)));
+        //         },
+        //         child: Text('View All'))
+        //   ],
         // ),
       ],
+    );
+  }
+}
+
+class AllPostWidget extends StatefulWidget {
+  int id;
+  UserCard user;
+  List<Post> postList;
+
+  AllPostWidget(this.id, this.user, this.postList, {Key? key});
+
+  @override
+  State<StatefulWidget> createState() => _AllPostWidgetState();
+}
+
+class _AllPostWidgetState extends State<AllPostWidget> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.user.username),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () {
+              Navigator.pop(context);
+            },
+          ),
+        ],
+      ),
+      body: PostScreen(widget.user.id, widget.postList),
+    );
+  }
+}
+
+class PostScreen extends StatefulWidget {
+  int id;
+  List<Post> postList;
+
+  PostScreen(
+    this.id,
+    this.postList, {
+    Key? key,
+  }) : super(key: key);
+
+  @override
+  State<StatefulWidget> createState() => PostScreenState();
+}
+
+class PostScreenState extends State<PostScreen> {
+  List<Post> myListPost = [];
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    myListPost = definePosts(widget.id, widget.postList);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: ListView.separated(
+          padding: const EdgeInsets.all(8),
+          itemCount: myListPost.length,
+          separatorBuilder: (BuildContext context, int index) => Divider(),
+          itemBuilder: (BuildContext context, int index) {
+            return Container(
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                child: ListTile(
+                  leading: Icon(Icons.account_circle),
+                  title: Text(myListPost[index].title),
+                  subtitle: Container(
+                    child: Text(myListPost[index].description),
+                  ),
+                ));
+          }),
     );
   }
 }
@@ -314,7 +453,7 @@ class Menus extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ListTile(
-            title: Text('Info'),
+            title: const Text('Info'),
             onTap: () {},
           ),
         ],
