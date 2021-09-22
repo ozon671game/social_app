@@ -28,15 +28,21 @@ class MyStatefulWidget extends StatefulWidget {
 }
 
 class _MyStatefulWidgetState extends State<MyStatefulWidget> {
-  List<UserCard> usersList = [];
+  List<UserCard> usersList = [
+    UserCard('adress', 'email', 1, 'name', 'phone', 'username', 'website')
+  ];
   List<Post> postList = [];
   List<Album> albumList = [];
+
+  bool isLoading = true;
 
   Future<void> func() async {
     usersList = await updateDataUserList();
     postList = await updateDataPostList();
     albumList = await updateDataAlbumList();
-    setState(() {});
+    setState(() {
+      isLoading = false;
+    });
   }
 
   @override
@@ -62,7 +68,6 @@ class _MyStatefulWidgetState extends State<MyStatefulWidget> {
 
   @override
   Widget build(BuildContext context) {
-    // static initialization inside class
     final List<Widget> _widgetOptions = <Widget>[
       ListUsersTab(usersList, postList),
       UserTab(usersList[0], postList),
@@ -106,7 +111,9 @@ class _MyStatefulWidgetState extends State<MyStatefulWidget> {
         ),
       ),
       body: Center(
-        child: _widgetOptions.elementAt(_selectedIndex),
+        child: isLoading
+            ? const CircularProgressIndicator()
+            : _widgetOptions.elementAt(_selectedIndex),
       ),
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
@@ -261,8 +268,7 @@ class UserTabState extends State<UserTab> {
           ),
         ),
         Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
-          IconButton(
-              onPressed: () {}, icon: const Icon(Icons.email)),
+          IconButton(onPressed: () {}, icon: const Icon(Icons.email)),
           IconButton(onPressed: () {}, icon: const Icon(Icons.add_a_photo)),
           IconButton(onPressed: () {}, icon: const Icon(Icons.album)),
           IconButton(onPressed: () {}, icon: const Icon(Icons.phone)),
@@ -320,42 +326,42 @@ class UserTabState extends State<UserTab> {
             ],
           ),
         ),
-
-        GridView.builder(gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: myListAlbum.length > 3 ? 3 : myListAlbum.length,
+        if (myListAlbum.length != 0) ...[
+          GridView.builder(
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: myListAlbum.length > 3 ? 3 : myListAlbum.length,
+              ),
+              itemCount: myListAlbum.length > 3 ? 3 : myListAlbum.length,
+              physics: NeverScrollableScrollPhysics(),
+              shrinkWrap: true,
+              itemBuilder: (BuildContext context, int index) {
+                return Card(
+                  child: Center(
+                    child: Text(myListAlbum[index].title),
+                  ),
+                );
+              }),
+          TextButton(
+              onPressed: () {
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) =>
+                            AllAlbumsWidget(widget.user, myListAlbum)));
+              },
+              child: const Text('View All')),
+        ],
+        const Text(
+          'Posts:',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w500,
+          ),
         ),
-            itemCount: myListAlbum.length > 3 ? 3 : myListAlbum.length,
-            physics: NeverScrollableScrollPhysics(),
-            shrinkWrap: true,
-            itemBuilder: (BuildContext context, int index){
-              return Card(
-                child: Center(
-                  child: Text(myListAlbum[index].title),
-                ),
-              );
-            }
-        ),
-        TextButton(
-            onPressed: () {
-              Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => AllAlbumsWidget(
-                          widget.user, myListAlbum)));
-            },
-            child: const Text('View All')
-        ),
-
-        const Text('Posts:',
-        style: TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.w500,
-        ),),
         const Divider(
           thickness: 20,
           height: 0,
         ),
-
         Container(
           child: ListView.builder(
               shrinkWrap: true,
@@ -381,9 +387,7 @@ class UserTabState extends State<UserTab> {
                       builder: (context) => AllPostWidget(
                           widget.user.id, widget.user, widget.postList)));
             },
-            child: const Text('View All')
-        ),
-
+            child: const Text('View All')),
       ],
     );
   }
@@ -439,7 +443,6 @@ class PostScreenState extends State<PostScreen> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     myListPost = definePosts(widget.id, widget.postList);
   }
@@ -455,13 +458,126 @@ class PostScreenState extends State<PostScreen> {
             return Container(
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 child: ListTile(
-                  leading: Icon(Icons.account_circle),
+                  onTap: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) =>
+                                SinglePost(myListPost[index])));
+                  },
+                  leading: const Icon(Icons.account_circle),
                   title: Text(myListPost[index].title),
                   subtitle: Container(
                     child: Text(myListPost[index].description),
                   ),
                 ));
           }),
+    );
+  }
+}
+
+class SinglePost extends StatefulWidget {
+  Post post;
+
+  SinglePost(this.post, {Key? key}) : super(key: key);
+
+  @override
+  State<StatefulWidget> createState() => _SinglePostState();
+}
+
+class _SinglePostState extends State<SinglePost> {
+  List<UserCard> users = [];
+  List<Comment> myCommentList = [];
+
+  Future<void> func() async {
+    myCommentList = await updateDataCommentList();
+    users = await updateDataUserList();
+    setState(() {
+      myCommentList = defineComment(widget.post.id, myCommentList);
+    });
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    func();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () {
+              Navigator.pop(context);
+            },
+          ),
+        ],
+      ),
+      body: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ListTile(
+            leading: Icon(Icons.account_circle),
+            title: Text(widget.post.title),
+            subtitle: Container(
+              child: Text(widget.post.description),
+            ),
+          ),
+          Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
+            IconButton(
+                onPressed: () {
+                  showModalBottomSheet<void>(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return Container(
+                        height: 200,
+                        // color: Colors.amber,
+                        child: Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            mainAxisSize: MainAxisSize.min,
+                            children: <Widget>[
+                              const Text('Modal BottomSheet'),
+                              TextFormField(
+                                decoration: InputDecoration(hintText: 'BUDAaa'),
+                              ),
+                              ElevatedButton(
+                                child: const Text('Close BottomSheet'),
+                                onPressed: () => Navigator.pop(context),
+                              )
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                },
+                icon: const Icon(Icons.add)),
+            IconButton(onPressed: () {}, icon: const Icon(Icons.announcement)),
+          ]),
+
+
+          if (myCommentList.isNotEmpty)
+            Expanded(
+              child: ListView.separated(
+                  padding: const EdgeInsets.all(8),
+                  itemCount: myCommentList.length,
+                  separatorBuilder: (BuildContext context, int index) =>
+                      Divider(),
+                  itemBuilder: (BuildContext context, int index) {
+                    return ListTile(
+                      leading: const Icon(Icons.account_circle),
+                      title: Text('users[myCommentList[index].userId].username'),
+                      subtitle: Text(myCommentList[index].text),
+                    );
+                  }),
+            ),
+        ],
+      ),
     );
   }
 }
@@ -491,25 +607,27 @@ class _AllAlbumsWidgetState extends State<AllAlbumsWidget> {
           ),
         ],
       ),
-      body: GridView.builder(gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: widget.listAlbum.length > 3 ? 3 : widget.listAlbum.length
-      ),
+      body: GridView.builder(
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount:
+                  widget.listAlbum.length > 3 ? 3 : widget.listAlbum.length),
           itemCount: widget.listAlbum.length,
-          itemBuilder: (BuildContext context, int index){
+          itemBuilder: (BuildContext context, int index) {
             return Card(
               child: InkWell(
-                onTap: (){
+                onTap: () {
                   Navigator.push(
-                      context, MaterialPageRoute(builder: (context) =>
-                      PhotosWidget(widget.listAlbum[index])));
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) =>
+                              PhotosWidget(widget.listAlbum[index])));
                 },
                 child: Center(
                   child: Text(widget.listAlbum[index].title),
                 ),
               ),
             );
-          }
-      ),
+          }),
     );
   }
 }
@@ -540,16 +658,14 @@ class _PhotosWidgetState extends State<PhotosWidget> {
           ),
         ],
       ),
-      body: GridView.builder(gridDelegate: const  SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 4,
-      ),
+      body: GridView.builder(
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 4,
+          ),
           itemCount: widget.album.numberPhotos,
-          itemBuilder: (BuildContext context, int index){
-            return const Card(
-              child: FlutterLogo()
-            );
-          }
-      ),
+          itemBuilder: (BuildContext context, int index) {
+            return const Card(child: FlutterLogo());
+          }),
     );
   }
 }

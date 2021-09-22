@@ -23,6 +23,11 @@ Future<List<WorkingCompany>> updateDataWorkingCompanyList() async {
   return _processResponseForWorkingCompany(a);
 }
 
+Future<List<Comment>> updateDataCommentList() async {
+  var a = await http.get(Uri.parse('https://my-json-server.typicode.com/ozon671game/demo/db'));
+  return _processResponseForComment(a);
+}
+
 List<UserCard> _processResponse(http.Response response) {
   if (response.statusCode == 200) {
     var users = jsonDecode(response.body)['profile'];
@@ -59,6 +64,15 @@ List<Album> _processResponseForAlbum(http.Response response){
   return [];
 }
 
+List<Comment> _processResponseForComment(http.Response response){
+  if (response.statusCode == 200) {
+    var comm = jsonDecode(response.body)['comments'];
+    var u = comm.map((com) => Comment.fromJson(com, com['userId'])).whereType<Comment>().toList();
+    return u;
+  }
+  return [];
+}
+
 List<Post> definePosts(int id, List<Post> listPost){
   List<Post> myListPost = [];
   listPost.forEach((post) {
@@ -87,4 +101,14 @@ List<Album> defineAlbum(int id, List<Album> listAlbum){
     }
   });
   return myListAlbum;
+}
+
+List<Comment> defineComment(int id, List<Comment> listComment){
+  List<Comment> myListComment = [];
+  listComment.forEach((com) {
+    if(com.postId == id) {
+      myListComment.add(com);
+    }
+  });
+  return myListComment;
 }

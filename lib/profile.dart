@@ -99,3 +99,23 @@ class Album{
     'id': id,
   };
 }
+
+class Comment{
+  final int id;
+  final int userId;
+  final int postId;
+  final String text;
+
+  Comment(this.id, this.userId, this.postId, this.text);
+
+  Comment.fromJson(Map<String, dynamic> json, this.userId)
+      : id = json['id'],
+        postId = json['postId'],
+        text = json['text'];
+
+  Map<String, dynamic> toJson() => {
+    'text': text,
+    'postId': postId,
+    'id': id,
+  };
+}
