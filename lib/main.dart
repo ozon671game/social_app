@@ -33,6 +33,7 @@ class _MyStatefulWidgetState extends State<MyStatefulWidget> {
   ];
   List<Post> postList = [];
   List<Album> albumList = [];
+  late UserCard currentUser;
 
   bool isLoading = true;
 
@@ -42,6 +43,7 @@ class _MyStatefulWidgetState extends State<MyStatefulWidget> {
     albumList = await updateDataAlbumList();
     setState(() {
       isLoading = false;
+      currentUser = usersList[0];
     });
   }
 
@@ -49,6 +51,7 @@ class _MyStatefulWidgetState extends State<MyStatefulWidget> {
   void initState() {
     super.initState();
     func();
+    currentUser = usersList[0];
   }
 
   int _selectedIndex = 0;
@@ -70,9 +73,9 @@ class _MyStatefulWidgetState extends State<MyStatefulWidget> {
   Widget build(BuildContext context) {
     final List<Widget> _widgetOptions = <Widget>[
       ListUsersTab(usersList, postList),
-      UserTab(usersList[0], postList),
-      AllPostWidget(usersList[0].id, usersList[0], postList),
-      AllAlbumsWidget(usersList[0], albumList),
+      UserTab(currentUser, postList),
+      AllPostWidget(currentUser.id, usersList[0], postList),
+      AllAlbumsWidget(currentUser, albumList),
       const Text(
         'Settings',
       ),
@@ -123,18 +126,18 @@ class _MyStatefulWidgetState extends State<MyStatefulWidget> {
             backgroundColor: Colors.indigoAccent,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.add),
+            icon: Icon(Icons.account_circle),
             label: 'Me',
             backgroundColor: Colors.indigoAccent,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.business),
-            label: 'Business',
+            icon: Icon(Icons.apps_rounded),
+            label: 'My Posts',
             backgroundColor: Colors.indigoAccent,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.school),
-            label: 'School',
+            icon: Icon(Icons.wallpaper),
+            label: 'My Albums',
             backgroundColor: Colors.indigoAccent,
           ),
         ],
@@ -571,7 +574,7 @@ class _SinglePostState extends State<SinglePost> {
                   itemBuilder: (BuildContext context, int index) {
                     return ListTile(
                       leading: const Icon(Icons.account_circle),
-                      title: Text('users[myCommentList[index].userId].username'),
+                      title: Text(users[myCommentList[index].userId].username),
                       subtitle: Text(myCommentList[index].text),
                     );
                   }),
