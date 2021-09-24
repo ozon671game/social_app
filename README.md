@@ -1,16 +1,32 @@
-# app_for_test
+Flutter Project
 
-A new Flutter project.
+https://github.com/ozon671game/social_app
 
-## Getting Started
+База данных в json 
+https://my-json-server.typicode.com/ozon671game/demo/db
 
-This project is a starting point for a Flutter application.
+Список пользователей. Вывод списка, полученного по апи в виде карточек вида:
+username
+name
 
-A few resources to get you started if this is your first Flutter project:
+Страница пользователя. Подробный вывод информации о пользователе:
+в AppBar - username
+name
+email
+phone
+website
+working(company)[
+name
+bs
+catchPhrase
+]
+adress
 
-- [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
+Список из 3-х превью (заголовок, 1 строчка текста...) постов пользователя + возможность посмотреть все (отдельный экран)
+список из 3-х превью альбомов пользователя с миниатюрой + возможность посмотреть все (отдельный экран)
 
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Отдельный экран для каждого поста с отрисовкой комментариев, каждый комментарий от определенного пользователя.
+Добавление комментария от текущего пользователя(запись в json).
+
+Список альбомов пользователя
+Детальная страница альбома(отрисовка изображений альбома)
