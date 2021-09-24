@@ -112,3 +112,10 @@ List<Comment> defineComment(int id, List<Comment> listComment){
   });
   return myListComment;
 }
+
+Future<void> putComment(Comment com) async {
+  String json = jsonEncode(com);
+  print(json);
+  var a = await http.post(Uri.parse('https://my-json-server.typicode.com/ozon671game/demo/comments'),body: json);
+  print(a);
+}

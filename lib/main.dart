@@ -72,9 +72,9 @@ class _MyStatefulWidgetState extends State<MyStatefulWidget> {
   @override
   Widget build(BuildContext context) {
     final List<Widget> _widgetOptions = <Widget>[
-      ListUsersTab(usersList, postList),
-      UserTab(currentUser, postList),
-      AllPostWidget(currentUser.id, usersList[0], postList),
+      ListUsersTab(currentUser.id, usersList, postList),
+      UserTab(currentUser.id, currentUser, postList),
+      AllPostWidget(currentUser.id, currentUser.id, currentUser, postList),
       AllAlbumsWidget(currentUser, albumList),
       const Text(
         'Settings',
@@ -150,11 +150,13 @@ class _MyStatefulWidgetState extends State<MyStatefulWidget> {
 }
 
 class UserCardFull extends StatefulWidget {
+  int curUserId;
   int id;
   UserCard user;
   List<Post> postList;
 
-  UserCardFull(this.id, this.user, this.postList, {Key? key});
+  UserCardFull(this.curUserId, this.id, this.user, this.postList, {Key? key})
+      : super(key: key);
 
   @override
   State<UserCardFull> createState() => _UserCardFullState();
@@ -175,16 +177,18 @@ class _UserCardFullState extends State<UserCardFull> {
           ),
         ],
       ),
-      body: UserTab(widget.user, widget.postList),
+      body: UserTab(widget.curUserId, widget.user, widget.postList),
     );
   }
 }
 
 class ListUsersTab extends StatelessWidget {
+  int curUserId;
   final List<UserCard> usersList;
   final List<Post> postList;
 
-  ListUsersTab(this.usersList, this.postList);
+  ListUsersTab(this.curUserId, this.usersList, this.postList, {Key? key})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -201,8 +205,8 @@ class ListUsersTab extends StatelessWidget {
             Navigator.push(
                 context,
                 MaterialPageRoute(
-                    builder: (context) =>
-                        (UserCardFull(index, usersList[index], postList))));
+                    builder: (context) => (UserCardFull(
+                        curUserId, index, usersList[index], postList))));
           },
         );
       },
@@ -212,10 +216,12 @@ class ListUsersTab extends StatelessWidget {
 }
 
 class UserTab extends StatefulWidget {
+  int curUserId;
   UserCard user;
   List<Post> postList;
 
-  UserTab(this.user, this.postList);
+  UserTab(this.curUserId, this.user, this.postList, {Key? key})
+      : super(key: key);
 
   @override
   State<StatefulWidget> createState() => UserTabState();
@@ -387,7 +393,7 @@ class UserTabState extends State<UserTab> {
               Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (context) => AllPostWidget(
+                      builder: (context) => AllPostWidget(widget.curUserId,
                           widget.user.id, widget.user, widget.postList)));
             },
             child: const Text('View All')),
@@ -397,11 +403,13 @@ class UserTabState extends State<UserTab> {
 }
 
 class AllPostWidget extends StatefulWidget {
+  int curUserId;
   int id;
   UserCard user;
   List<Post> postList;
 
-  AllPostWidget(this.id, this.user, this.postList, {Key? key});
+  AllPostWidget(this.curUserId, this.id, this.user, this.postList, {Key? key})
+      : super(key: key);
 
   @override
   State<StatefulWidget> createState() => _AllPostWidgetState();
@@ -422,16 +430,18 @@ class _AllPostWidgetState extends State<AllPostWidget> {
           ),
         ],
       ),
-      body: PostScreen(widget.user.id, widget.postList),
+      body: PostScreen(widget.curUserId, widget.user.id, widget.postList),
     );
   }
 }
 
 class PostScreen extends StatefulWidget {
+  int curUserId;
   int id;
   List<Post> postList;
 
   PostScreen(
+    this.curUserId,
     this.id,
     this.postList, {
     Key? key,
@@ -465,14 +475,12 @@ class PostScreenState extends State<PostScreen> {
                     Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (context) =>
-                                SinglePost(myListPost[index])));
+                            builder: (context) => SinglePost(
+                                widget.curUserId, myListPost[index])));
                   },
                   leading: const Icon(Icons.account_circle),
                   title: Text(myListPost[index].title),
-                  subtitle: Container(
-                    child: Text(myListPost[index].description),
-                  ),
+                  subtitle: Text(myListPost[index].description),
                 ));
           }),
     );
@@ -480,29 +488,37 @@ class PostScreenState extends State<PostScreen> {
 }
 
 class SinglePost extends StatefulWidget {
+  int curUserId;
   Post post;
 
-  SinglePost(this.post, {Key? key}) : super(key: key);
+  SinglePost(this.curUserId, this.post, {Key? key}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() => _SinglePostState();
 }
 
 class _SinglePostState extends State<SinglePost> {
+  late UserCard curUser;
   List<UserCard> users = [];
   List<Comment> myCommentList = [];
+  String text = '';
+
+  bool isLoading = true;
 
   Future<void> func() async {
     myCommentList = await updateDataCommentList();
     users = await updateDataUserList();
     setState(() {
       myCommentList = defineComment(widget.post.id, myCommentList);
+      users.forEach((e) {
+        if (e.id == widget.curUserId) curUser = e;
+        isLoading = false;
+      });
     });
   }
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     func();
   }
@@ -524,61 +540,97 @@ class _SinglePostState extends State<SinglePost> {
         mainAxisSize: MainAxisSize.min,
         children: [
           ListTile(
-            leading: Icon(Icons.account_circle),
+            leading: const Icon(Icons.account_circle),
             title: Text(widget.post.title),
-            subtitle: Container(
-              child: Text(widget.post.description),
-            ),
+            subtitle: Text(widget.post.description),
           ),
-          Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
-            IconButton(
-                onPressed: () {
-                  showModalBottomSheet<void>(
-                    context: context,
-                    builder: (BuildContext context) {
-                      return Container(
-                        height: 200,
-                        // color: Colors.amber,
-                        child: Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            mainAxisSize: MainAxisSize.min,
-                            children: <Widget>[
-                              const Text('Modal BottomSheet'),
-                              TextFormField(
-                                decoration: InputDecoration(hintText: 'BUDAaa'),
-                              ),
-                              ElevatedButton(
-                                child: const Text('Close BottomSheet'),
-                                onPressed: () => Navigator.pop(context),
-                              )
-                            ],
+          if (isLoading)
+            const CircularProgressIndicator()
+          else ...[
+            Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
+              IconButton(
+                  onPressed: () {
+                    showModalBottomSheet<void>(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return SizedBox(
+                          height: 200,
+                          child: Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              mainAxisSize: MainAxisSize.min,
+                              children: <Widget>[
+                                const Text(
+                                  'Add new comment:',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 20,
+                                  ),
+                                ),
+                                ListTile(
+                                  leading: const Icon(Icons.account_circle),
+                                  title: Text(curUser.username),
+                                  subtitle: TextFormField(
+                                    decoration:
+                                        const InputDecoration(hintText: 'Enter text'),
+                                    onChanged: (String? value) {
+                                      text = value!;
+                                    },
+                                  ),
+                                ),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceAround,
+                                  children: [
+                                    Container(
+                                      color: Colors.indigoAccent,
+                                      child: ElevatedButton(
+                                        child: const Text('Send'),
+                                        onPressed: () {
+                                          Comment com = Comment(1, curUser.id,
+                                              widget.post.id, text);
+                                          putComment(com);
+                                          Navigator.pop(context);
+                                        },
+                                      ),
+                                    ),
+                                    Container(
+                                      color: Colors.indigoAccent,
+                                      child: ElevatedButton(
+                                        child: const Text('Cancel'),
+                                        onPressed: () => Navigator.pop(context),
+                                      ),
+                                    ),
+                                  ],
+                                )
+                              ],
+                            ),
                           ),
-                        ),
-                      );
-                    },
-                  );
-                },
-                icon: const Icon(Icons.add)),
-            IconButton(onPressed: () {}, icon: const Icon(Icons.announcement)),
-          ]),
-
-
-          if (myCommentList.isNotEmpty)
-            Expanded(
-              child: ListView.separated(
-                  padding: const EdgeInsets.all(8),
-                  itemCount: myCommentList.length,
-                  separatorBuilder: (BuildContext context, int index) =>
-                      Divider(),
-                  itemBuilder: (BuildContext context, int index) {
-                    return ListTile(
-                      leading: const Icon(Icons.account_circle),
-                      title: Text(users[myCommentList[index].userId].username),
-                      subtitle: Text(myCommentList[index].text),
+                        );
+                      },
                     );
-                  }),
-            ),
+                  },
+                  icon: const Icon(Icons.add)),
+              IconButton(
+                  onPressed: () {}, icon: const Icon(Icons.announcement)),
+            ]),
+            if (myCommentList.isNotEmpty)
+              Expanded(
+                child: ListView.separated(
+                    padding: const EdgeInsets.all(8),
+                    itemCount: myCommentList.length,
+                    separatorBuilder: (BuildContext context, int index) =>
+                        Divider(),
+                    itemBuilder: (BuildContext context, int index) {
+                      return ListTile(
+                        leading: const Icon(Icons.account_circle),
+                        title:
+                            Text(users[myCommentList[index].userId].username),
+                        subtitle: Text(myCommentList[index].text),
+                      );
+                    }),
+              ),
+          ]
         ],
       ),
     );

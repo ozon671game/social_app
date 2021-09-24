@@ -114,8 +114,9 @@ class Comment{
         text = json['text'];
 
   Map<String, dynamic> toJson() => {
+    'userId': userId,
+    'id': id,
     'text': text,
     'postId': postId,
-    'id': id,
   };
 }
